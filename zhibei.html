@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>羊山石境 · 灵羊佛杯 | 唐风猜杯游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(145deg, #2a241e 0%, #1a1510 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: '幼圆', 'Yuanti SC', 'YouYuan', monospace;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 15% 30%, rgba(180,140,100,0.06) 2%, transparent 2.5%);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        .game-container {
+            background: #5c3e28cc;
+            backdrop-filter: blur(2px);
+            border-radius: 80px 80px 60px 60px;
+            padding: 30px 40px 40px;
+            box-shadow: 0 25px 35px rgba(0,0,0,0.5), inset 0 1px 4px rgba(255,215,150,0.15);
+            border: 2px solid #b88a5a;
+            border-top: 6px solid #dbb06c;
+            position: relative;
+        }
+
+        .game-container::before {
+            content: "✦ 羊山石境 · 灵羊佛杯 ✦";
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #5c3e28dd;
+            backdrop-filter: blur(4px);
+            padding: 6px 28px;
+            border-radius: 60px;
+            font-size: 1rem;
+            color: #e2bc7c;
+            letter-spacing: 4px;
+            white-space: nowrap;
+            font-family: '幼圆', monospace;
+            border: 1px solid #b88a5a;
+            box-shadow: 0 4px 12px black;
+        }
+
+        .title-area {
+            text-align: center;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+        .lotus-icon {
+            width: 50px;
+            height: 50px;
+            display: inline-block;
+        }
+        .sheep-icon {
+            width: 50px;
+            height: 50px;
+            display: inline-block;
+        }
+        .title-text {
+            font-size: 3.2rem;
+            color: #e2bc7c;
+            text-shadow: 4px 4px 0 #4a2e1e;
+            letter-spacing: 8px;
+            font-weight: bold;
+            font-family: '幼圆', 'Yuanti SC', monospace;
+        }
+
+        .difficulty-menu {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 20px 0 20px;
+            flex-wrap: wrap;
+        }
+        .diff-card {
+            background: #2f231cee;
+            border: 2px solid #b88a5a;
+            border-radius: 56px;
+            padding: 20px 36px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.1s linear;
+            backdrop-filter: blur(4px);
+            min-width: 160px;
+            position: relative;
+            box-shadow: 0 8px 0 #1f1510;
+        }
+        .diff-card:hover {
+            transform: translateY(-4px);
+            background: #3e2c20;
+            border-color: #dbb06c;
+            box-shadow: 0 12px 0 #1f1510;
+        }
+        .diff-card:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #1f1510;
+        }
+        .diff-card h2 {
+            font-size: 2rem;
+            color: #e2bc7c;
+            font-family: '幼圆', monospace;
+            margin-bottom: 8px;
+        }
+        .diff-card p {
+            color: #c6a06a;
+            font-size: 0.9rem;
+        }
+
+        .game-canvas-wrapper {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        canvas {
+            background: #6b4f32;
+            border-radius: 48px;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.5);
+            display: block;
+            margin: 0 auto;
+            cursor: pointer;
+            border: 3px solid #b88a5a;
+        }
+        .back-btn {
+            margin-top: 20px;
+            background: #4a3322;
+            border: none;
+            padding: 8px 28px;
+            border-radius: 60px;
+            font-family: '幼圆', monospace;
+            font-size: 1rem;
+            color: #dbb06c;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #2a1f15;
+            transition: 0.05s linear;
+        }
+        .back-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #2a1f15;
+        }
+        .message {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 1rem;
+            color: #e2bc7c;
+            background: #00000066;
+            padding: 6px 18px;
+            border-radius: 60px;
+            display: inline-block;
+        }
+        .result-pop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+        }
+        .result-card {
+            background: #2a201ae0;
+            border-radius: 64px 40px 64px 40px;
+            padding: 32px 48px;
+            text-align: center;
+            border: 4px solid #b88a5a;
+            box-shadow: 0 20px 35px black;
+            font-family: '幼圆', monospace;
+            backdrop-filter: blur(8px);
+        }
+        .result-card h2 {
+            font-size: 2.2rem;
+            margin-bottom: 12px;
+            color: #e2bc7c;
+        }
+        .result-card p {
+            font-size: 1.2rem;
+            margin: 12px 0;
+            color: #dbb06c;
+        }
+        .result-card button {
+            background: #6b4a30;
+            border: none;
+            font-size: 1.2rem;
+            padding: 8px 28px;
+            border-radius: 60px;
+            margin-top: 16px;
+            cursor: pointer;
+            font-family: '幼圆', monospace;
+            color: #f5cf8a;
+        }
+        .close-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4a3322;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            color: #dbb06c;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #2a1f15;
+            transition: 0.05s linear;
+            z-index: 100;
+        }
+        .close-btn:hover {
+            transform: scale(1.1);
+        }
+        .close-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #2a1f15;
+        }
+    </style>
+</head>
+<body>
+    <button class="close-btn" onclick="window.close()">✕</button>
+
+<div class="game-container" id="mainMenu">
+    <div class="title-area">
+        <svg class="lotus-icon" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M30 10 L28 22 L20 18 L24 28 L14 26 L20 34 L10 34 L18 42 L12 46 L22 46 L28 52 L30 42 L32 52 L38 46 L48 46 L42 42 L50 34 L40 34 L46 26 L36 28 L40 18 L32 22 L30 10Z" fill="#8b5a2b" stroke="#8b5a2b" stroke-width="1" stroke-linejoin="round" opacity="0.85"/>
+            <circle cx="30" cy="32" r="4" fill="#1a1510" fill-opacity="0.3"/>
+        </svg>
+        <span class="title-text">羊山石境 · 灵羊佛杯</span>
+        <svg class="sheep-icon" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M30 12 C26 12 23 14 22 18 C20 20 18 22 18 26 C18 30 20 32 22 34 C24 36 26 36 28 36 L28 40 L24 42 L24 46 L30 48 L36 46 L36 42 L32 40 L32 36 C34 36 36 34 38 32 C40 30 42 28 42 24 C42 20 40 18 38 16 C37 14 34 12 30 12Z" fill="#8b5a2b" stroke="#8b5a2b" stroke-width="1.2" opacity="0.85"/>
+            <circle cx="26" cy="24" r="2.5" fill="#1a1510" fill-opacity="0.25"/>
+            <circle cx="34" cy="24" r="2.5" fill="#1a1510" fill-opacity="0.25"/>
+            <path d="M28 28 L32 28" stroke="#5a3e22" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+    </div>
+    <div class="difficulty-menu">
+        <div class="diff-card" data-diff="easy">
+            <h2>简单</h2>
+            <p>莲华 · 缓移</p>
+        </div>
+        <div class="diff-card" data-diff="medium">
+            <h2>中等</h2>
+            <p>菩提 · 疾转</p>
+        </div>
+        <div class="diff-card" data-diff="hard">
+            <h2>困难</h2>
+            <p>金刚 · 极速</p>
+        </div>
+    </div>
+</div>
+
+<div class="game-canvas-wrapper" id="gameArea" style="display: none;">
+    <canvas id="gameCanvas" width="900" height="550"></canvas>
+    <div style="display: flex; gap: 20px; margin-top: 16px; align-items: center;">
+        <button class="back-btn" id="backToMenuBtn">🏮 返回菜单</button>
+        <div class="message" id="gameMessage">🐏 灵羊入杯，佛杯移位中...</div>
+    </div>
+</div>
+
+<div id="resultModal" class="result-pop">
+    <div class="result-card">
+        <h2 id="resultTitle">✨ 佛光普照 ✨</h2>
+        <p id="resultText">你找到了灵羊！功德圆满</p>
+        <button id="resultCloseBtn">善哉 · 继续</button>
+    </div>
+</div>
+
+<script>
+    (function(){
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const W = 900, H = 550;
+        canvas.width = W; canvas.height = H;
+
+        let currentDifficulty = null;
+        let gamePhase = 'menu';
+        let cups = [];
+        let sheepPos = -1;
+        let swapCount = 0;
+        let totalSwaps = 0;
+        let swapDelay = 0;
+        let swapInterval = null;
+        let isAnimatingSwap = false;
+        let swapQueue = [];
+        let cupPositions = [];
+        let targetPositions = [];
+        
+        let introStep = 0;
+        let sheepAnimX = 0, sheepAnimY = 0;
+        let introStartTime = 0;
+        
+        let showEmotionSheep = false;
+        let emotionSheepPos = { x: 0, y: 0, emotion: '' };
+        
+        const cupW = 142, cupH = 152;
+        const startX = (W - (cupW * 4 + 80)) / 2;
+        const baseY = H - cupH - 45;
+        
+        function initCupPositions() {
+            for(let i=0;i<4;i++) {
+                cupPositions[i] = { x: startX + i * (cupW + 27), y: baseY };
+                targetPositions[i] = { x: cupPositions[i].x, y: cupPositions[i].y };
+            }
+        }
+        
+        function initGame(level) {
+            currentDifficulty = level;
+            if(level === 'easy') {
+                totalSwaps = 6;
+                swapDelay = 800;
+            } else if(level === 'medium') {
+                totalSwaps = 18;
+                swapDelay = 150;
+            } else {
+                totalSwaps = 45;
+                swapDelay = 12;
+            }
+            swapCount = 0;
+            isAnimatingSwap = false;
+            swapQueue = [];
+            if(swapInterval) clearInterval(swapInterval);
+            sheepPos = Math.floor(Math.random() * 4);
+            cups = [];
+            for(let i=0;i<4;i++) {
+                cups.push({
+                    hasSheep: (i === sheepPos),
+                    isOpen: false,
+                    x: startX + i * (cupW + 27),
+                    y: baseY,
+                    width: cupW,
+                    height: cupH
+                });
+            }
+            initCupPositions();
+            gamePhase = 'intro';
+            showEmotionSheep = false;
+            drawGame();
+            startIntroAnimation();
+        }
+        
+        function drawSheepCharacter(x, y, w, h, emotion) {
+            ctx.save();
+            ctx.shadowColor = "rgba(0,0,0,0.3)";
+            ctx.shadowBlur = 4;
+            
+            ctx.fillStyle = '#fef2df';
+            ctx.beginPath();
+            ctx.ellipse(x+w/2, y+h/2+4, w/2-4, h/2-2, 0, 0, Math.PI*2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#c5321e';
+            ctx.beginPath();
+            ctx.ellipse(x+w/2, y+h/2+8, w/2-6, h/2-6, 0, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = '#f5b542';
+            for(let i=0;i<4;i++) ctx.fillRect(x+12+i*12, y+h/2+2, 5, 12);
+            
+            ctx.fillStyle = '#fdf0d8';
+            ctx.beginPath();
+            ctx.ellipse(x+w/2, y+16, 24, 26, 0, 0, Math.PI*2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#ac7842';
+            ctx.beginPath();
+            ctx.moveTo(x+10, y+6);
+            ctx.quadraticCurveTo(x+4, y-2, x+14, y-4);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x+w-10, y+6);
+            ctx.quadraticCurveTo(x+w-4, y-2, x+w-14, y-4);
+            ctx.fill();
+            
+            ctx.fillStyle = '#e0bc8a';
+            ctx.beginPath();
+            ctx.ellipse(x+8, y+20, 8, 12, -0.3, 0, Math.PI*2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(x+w-8, y+20, 8, 12, 0.3, 0, Math.PI*2);
+            ctx.fill();
+            
+            if(emotion === 'cry') {
+                ctx.fillStyle = '#2f2418';
+                ctx.fillRect(x+w/2-12, y+10, 6, 3);
+                ctx.fillRect(x+w/2+6, y+10, 6, 3);
+                ctx.fillStyle = "#5a8eff";
+                ctx.fillRect(x+w/2-8, y+18, 4, 8);
+                ctx.fillRect(x+w/2+4, y+18, 4, 8);
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(x+w/2-7, y+19, 2, 4);
+                ctx.fillRect(x+w/2+5, y+19, 2, 4);
+                ctx.beginPath();
+                ctx.arc(x+w/2, y+26, 6, 0.2, Math.PI - 0.2);
+                ctx.fillStyle = "#8b5a2e";
+                ctx.fill();
+            } 
+            else if(emotion === 'smirk') {
+                ctx.fillStyle = '#2f2418';
+                ctx.fillRect(x+w/2-14, y+6, 8, 3);
+                ctx.fillRect(x+w/2+6, y+6, 8, 3);
+                ctx.fillRect(x+w/2-12, y+11, 4, 5);
+                ctx.fillRect(x+w/2+8, y+11, 4, 5);
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(x+w/2-11, y+12, 2, 3);
+                ctx.fillRect(x+w/2+9, y+12, 2, 3);
+                ctx.beginPath();
+                ctx.arc(x+w/2, y+27, 7, 0.05, Math.PI - 0.05);
+                ctx.fillStyle = "#b56a2e";
+                ctx.fill();
+                ctx.fillStyle = "#2f2418";
+                ctx.fillRect(x+w/2-16, y+5, 10, 2);
+                ctx.fillRect(x+w/2+6, y+5, 10, 2);
+            } 
+            else {
+                ctx.fillStyle = '#2f2418';
+                ctx.beginPath();
+                ctx.ellipse(x+w/2-10, y+12, 3, 5, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(x+w/2+10, y+12, 3, 5, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.ellipse(x+w/2-11, y+10, 1.5, 3, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(x+w/2+9, y+10, 1.5, 3, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x+w/2, y+24, 8, 0.05, Math.PI - 0.05);
+                ctx.strokeStyle = '#7a5a38';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            
+            ctx.fillStyle = '#ffb347';
+            ctx.beginPath();
+            ctx.arc(x+w/2, y+6, 3, 0, Math.PI*2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#b8752e';
+            for(let i=0;i<5;i++) ctx.fillRect(x+8+i*9, y+36, 4, 4);
+            
+            ctx.fillStyle = '#e0bc8a';
+            ctx.fillRect(x+6, y+32, 8, 10);
+            ctx.fillRect(x+w-14, y+32, 8, 10);
+            ctx.fillStyle = '#c25a38';
+            ctx.fillRect(x+8, y+35, 4, 6);
+            ctx.fillRect(x+w-12, y+35, 4, 6);
+            
+            ctx.fillStyle = '#e8aa44';
+            ctx.fillRect(x+12, y+42, w-24, 5);
+            
+            ctx.restore();
+        }
+        
+        function drawBuddhaHead(x, y, w, h, isOpen, hasSheep, showEmotion, emotionType) {
+            if(isOpen) {
+                ctx.fillStyle = '#5a3e2a';
+                ctx.fillRect(x+5, y+10, w-10, h-20);
+                if(hasSheep) {
+                    drawSheepCharacter(x+w/2-26, y+h/2-28, 52, 56, 
+                        (showEmotion && emotionType) ? emotionType : 'normal');
+                } else {
+                    ctx.fillStyle = '#a77c4a';
+                    ctx.font = "bold 22px '幼圆'";
+                    ctx.fillText("空", x+w/2-12, y+h/2+6);
+                }
+                return;
+            }
+            
+            ctx.save();
+            ctx.shadowBlur = 4;
+            ctx.shadowColor = "rgba(0,0,0,0.3)";
+            
+            const gradBg = ctx.createLinearGradient(x+5, y+5, x+w-5, y+h-5);
+            gradBg.addColorStop(0, '#c9a16e');
+            gradBg.addColorStop(1, '#9c764a');
+            ctx.fillStyle = gradBg;
+            ctx.beginPath();
+            ctx.ellipse(x+w/2, y+h/2-8, w/2-8, h/2-5, 0, 0, Math.PI*2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#b87c4a';
+            ctx.beginPath();
+            ctx.ellipse(x+w/2, y+12, 20, 22, 0, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = '#dba458';
+            ctx.beginPath();
+            ctx.ellipse(x+w/2, y+12, 14, 16, 0, 0, Math.PI*2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#e6cf9e';
+            ctx.beginPath();
+            ctx.ellipse(x+w/2, y+40, 32, 36, 0, 0, Math.PI*2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#2f2418';
+            ctx.beginPath();
+            ctx.ellipse(x+w/2-14, y+34, 5, 6, 0, 0, Math.PI*2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(x+w/2+14, y+34, 5, 6, 0, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(x+w/2-13, y+32, 2, 3, 0, 0, Math.PI*2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(x+w/2+15, y+32, 2, 3, 0, 0, Math.PI*2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#5a3e2a';
+            ctx.fillRect(x+w/2-20, y+28, 16, 3);
+            ctx.fillRect(x+w/2+4, y+28, 16, 3);
+            
+            ctx.fillStyle = '#b58a5a';
+            ctx.fillRect(x+w/2-3, y+42, 6, 6);
+            
+            ctx.beginPath();
+            ctx.arc(x+w/2, y+52, 9, 0.05, Math.PI - 0.05);
+            ctx.strokeStyle = '#7a5a38';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#c9945c';
+            ctx.fillRect(x+8, y+30, 14, 24);
+            ctx.fillRect(x+w-22, y+30, 14, 24);
+            ctx.fillStyle = '#dbb87a';
+            ctx.fillRect(x+10, y+34, 6, 16);
+            ctx.fillRect(x+w-16, y+34, 6, 16);
+            
+            ctx.fillStyle = '#ffd966';
+            ctx.beginPath();
+            ctx.arc(x+w/2, y+26, 4, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = '#e09d32';
+            ctx.beginPath();
+            ctx.arc(x+w/2, y+26, 2, 0, Math.PI*2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#8f623e';
+            ctx.fillRect(x+12, y+h-16, w-24, 8);
+            ctx.fillStyle = '#c9a16e';
+            for(let i=0;i<5;i++) ctx.fillRect(x+20+i*18, y+h-12, 8, 5);
+            
+            ctx.beginPath();
+            ctx.ellipse(x+w/2, y+42, w/2-5, h/2-8, 0, 0, Math.PI*2);
+            ctx.strokeStyle = '#e2bc7c';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
+        }
+        
+        function startIntroAnimation() {
+            introStep = 1;
+            introStartTime = performance.now();
+            sheepAnimX = -70;
+            sheepAnimY = baseY - 20;
+            drawGameWithSheep();
+            requestAnimationFrame(updateIntro);
+        }
+        
+        function updateIntro(now) {
+            if(gamePhase !== 'intro') return;
+            const elapsed = now - introStartTime;
+            if(introStep === 1) {
+                const targetCup = cups[sheepPos];
+                const targetX = targetCup.x + cupW/2 - 26;
+                const targetY = targetCup.y + cupH/2 - 28;
+                const t = Math.min(1, elapsed / 700);
+                const ease = 1 - Math.pow(1-t, 2);
+                sheepAnimX = -70 + (targetX + 70) * ease;
+                sheepAnimY = (baseY - 20) + (targetY - (baseY-20)) * ease;
+                if(t >= 1) {
+                    introStep = 2;
+                    introStartTime = now;
+                }
+                drawGameWithSheep();
+                requestAnimationFrame(updateIntro);
+            } else if(introStep === 2) {
+                if(elapsed > 600) {
+                    gamePhase = 'shuffle';
+                    startShuffle();
+                } else {
+                    drawGame();
+                    requestAnimationFrame(updateIntro);
+                }
+            }
+        }
+        
+        function drawGameWithSheep() {
+            drawGame();
+            drawSheepCharacter(sheepAnimX, sheepAnimY, 52, 56, 'normal');
+        }
+        
+        function startShuffle() {
+            if(swapInterval) clearInterval(swapInterval);
+            swapCount = 0;
+            isAnimatingSwap = false;
+            swapQueue = [];
+            for(let i=0;i<totalSwaps;i++) {
+                let a = Math.floor(Math.random() * 4);
+                let b = Math.floor(Math.random() * 4);
+                while(a === b) b = Math.floor(Math.random() * 4);
+                swapQueue.push({a,b});
+            }
+            let diffName = currentDifficulty === 'easy' ? '简单' : (currentDifficulty === 'medium' ? '中等' : '困难');
+            let speedHint = currentDifficulty === 'easy' ? '缓缓移动' : (currentDifficulty === 'medium' ? '快速移位' : '⚡极速乱舞⚡');
+            document.getElementById('gameMessage').innerHTML = `🔥 ${diffName}模式 · ${speedHint} 🔥`;
+            processNextSwap();
+        }
+        
+        function processNextSwap() {
+            if(gamePhase !== 'shuffle') return;
+            if(swapCount >= totalSwaps) {
+                gamePhase = 'waitClick';
+                document.getElementById('gameMessage').innerText = '🪷 佛杯移位结束，请点击你认为有灵羊的杯子！';
+                drawGame();
+                return;
+            }
+            const swap = swapQueue[swapCount];
+            startSwapAnimation(swap.a, swap.b, () => {
+                setTimeout(() => {
+                    swapCount++;
+                    processNextSwap();
+                }, swapDelay);
+            });
+        }
+        
+        function startSwapAnimation(idxA, idxB, onComplete) {
+            if(isAnimatingSwap) return;
+            isAnimatingSwap = true;
+            const tempX = targetPositions[idxA].x;
+            const tempY = targetPositions[idxA].y;
+            targetPositions[idxA].x = targetPositions[idxB].x;
+            targetPositions[idxA].y = targetPositions[idxB].y;
+            targetPositions[idxB].x = tempX;
+            targetPositions[idxB].y = tempY;
+            const tempSheep = cups[idxA].hasSheep;
+            cups[idxA].hasSheep = cups[idxB].hasSheep;
+            cups[idxB].hasSheep = tempSheep;
+            for(let i=0;i<4;i++) if(cups[i].hasSheep) sheepPos = i;
+            
+            let animStart = null;
+            const startPosA = { x: cupPositions[idxA].x, y: cupPositions[idxA].y };
+            const startPosB = { x: cupPositions[idxB].x, y: cupPositions[idxB].y };
+            const endPosA = { x: targetPositions[idxA].x, y: targetPositions[idxA].y };
+            const endPosB = { x: targetPositions[idxB].x, y: targetPositions[idxB].y };
+            
+            function step(timestamp) {
+                if(!animStart) animStart = timestamp;
+                const progress = Math.min(1, (timestamp - animStart) / 200);
+                const ease = 1 - Math.pow(1-progress, 2);
+                cupPositions[idxA].x = startPosA.x + (endPosA.x - startPosA.x) * ease;
+                cupPositions[idxA].y = startPosA.y + (endPosA.y - startPosA.y) * ease;
+                cupPositions[idxB].x = startPosB.x + (endPosB.x - startPosB.x) * ease;
+                cupPositions[idxB].y = startPosB.y + (endPosB.y - startPosB.y) * ease;
+                drawGame();
+                if(progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    cupPositions[idxA].x = endPosA.x;
+                    cupPositions[idxA].y = endPosA.y;
+                    cupPositions[idxB].x = endPosB.x;
+                    cupPositions[idxB].y = endPosB.y;
+                    isAnimatingSwap = false;
+                    if(onComplete) onComplete();
+                }
+            }
+            requestAnimationFrame(step);
+        }
+        
+        function drawGame() {
+            ctx.clearRect(0, 0, W, H);
+            ctx.fillStyle = '#8b6946';
+            ctx.fillRect(0, H-110, W, 110);
+            ctx.fillStyle = '#a87c4a';
+            for(let i=0;i<80;i++) ctx.fillRect(i*35, H-108, 18, 4);
+            ctx.fillStyle = '#c6a06a';
+            ctx.font = "24px '幼圆'";
+            ctx.fillText("卍", 40, H-40);
+            ctx.fillText("卍", W-60, H-40);
+            
+            for(let i=0;i<4;i++) {
+                const cup = cups[i];
+                const x = cupPositions[i].x;
+                const y = cupPositions[i].y;
+                const isThisEmotionCup = (showEmotionSheep && emotionSheepPos.x === x && emotionSheepPos.y === y);
+                drawBuddhaHead(x, y, cupW, cupH, cup.isOpen, cup.hasSheep, isThisEmotionCup, isThisEmotionCup ? emotionSheepPos.emotion : 'normal');
+            }
+            
+            if(gamePhase === 'waitClick') {
+                ctx.font = "18px '幼圆'";
+                ctx.fillStyle = "#f5cf8a";
+                ctx.fillText("点击佛杯 揭开灵羊", W/2-90, H-25);
+            }
+        }
+        
+        function handleCanvasClick(e) {
+            if(gamePhase !== 'waitClick') return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mouseX = (e.clientX - rect.left) * scaleX;
+            const mouseY = (e.clientY - rect.top) * scaleY;
+            for(let i=0;i<4;i++) {
+                const x = cupPositions[i].x;
+                const y = cupPositions[i].y;
+                if(mouseX >= x && mouseX <= x+cupW && mouseY >= y && mouseY <= y+cupH) {
+                    if(cups[i].isOpen) return;
+                    cups[i].isOpen = true;
+                    const isWin = cups[i].hasSheep;
+                    if(isWin) {
+                        showEmotionSheep = true;
+                        emotionSheepPos = { x: x, y: y, emotion: 'cry' };
+                        drawGame();
+                        showResult(true);
+                    } else {
+                        const trueSheepIdx = cups.findIndex(c => c.hasSheep);
+                        const trueX = cupPositions[trueSheepIdx].x;
+                        const trueY = cupPositions[trueSheepIdx].y;
+                        showEmotionSheep = true;
+                        emotionSheepPos = { x: trueX, y: trueY, emotion: 'smirk' };
+                        drawGame();
+                        showResult(false);
+                    }
+                    gamePhase = 'result';
+                    break;
+                }
+            }
+        }
+        
+        function showResult(win) {
+            const modal = document.getElementById('resultModal');
+            const title = document.getElementById('resultTitle');
+            const text = document.getElementById('resultText');
+            if(win) {
+                title.innerText = '😭 小羊哭泣 😭';
+                text.innerText = '被找到了... 羊羊委屈，但功德莲花仍赠予你！';
+            } else {
+                title.innerText = '😏 小羊窃喜 😏';
+                text.innerText = '嘿嘿，没找到我！再试一次吧～';
+            }
+            modal.style.visibility = 'visible';
+            modal.style.opacity = '1';
+        }
+        
+        function hideResult() {
+            const modal = document.getElementById('resultModal');
+            modal.style.visibility = 'hidden';
+            modal.style.opacity = '0';
+            backToMenu();
+        }
+        
+        function backToMenu() {
+            if(swapInterval) clearInterval(swapInterval);
+            gamePhase = 'menu';
+            showEmotionSheep = false;
+            document.getElementById('mainMenu').style.display = 'block';
+            document.getElementById('gameArea').style.display = 'none';
+        }
+        
+        function startGameWithDifficulty(level) {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('gameArea').style.display = 'flex';
+            initGame(level);
+            drawGame();
+        }
+        
+        function bindEvents() {
+            document.querySelectorAll('.diff-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    const diff = card.getAttribute('data-diff');
+                    startGameWithDifficulty(diff);
+                });
+            });
+            document.getElementById('backToMenuBtn').addEventListener('click', () => {
+                if(swapInterval) clearInterval(swapInterval);
+                backToMenu();
+            });
+            document.getElementById('resultCloseBtn').addEventListener('click', () => {
+                hideResult();
+            });
+            canvas.addEventListener('click', handleCanvasClick);
+        }
+        
+        bindEvents();
+        document.getElementById('mainMenu').style.display = 'block';
+        document.getElementById('gameArea').style.display = 'none';
+    })();
+</script>
+</body>
+</html>

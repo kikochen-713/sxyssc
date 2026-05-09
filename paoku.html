@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>羊山石境·石佛羊 | 自由移动版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #1a1612;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: '幼圆', 'Yuanti SC', 'YouYuan', monospace;
+            padding: 20px;
+        }
+
+        .game-wrapper {
+            background: #2c241e;
+            padding: 20px 24px 24px 24px;
+            border-radius: 48px;
+            box-shadow: 0 16px 0 #110e0a;
+            border: 2px solid #b88a5a;
+            position: relative;
+        }
+
+        .game-wrapper::before {
+            content: "卍";
+            position: absolute;
+            top: -12px;
+            left: 30px;
+            font-size: 28px;
+            color: #dbb06c;
+            background: #2c241e;
+            padding: 0 12px;
+            font-weight: bold;
+        }
+
+        .game-wrapper::after {
+            content: "卍";
+            position: absolute;
+            top: -12px;
+            right: 30px;
+            font-size: 28px;
+            color: #dbb06c;
+            background: #2c241e;
+            padding: 0 12px;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.6);
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+            cursor: pointer;
+            border-radius: 20px;
+            border: 3px solid #e2bc7c;
+        }
+
+        .info-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 18px;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .info-item {
+            background: #18120ccc;
+            backdrop-filter: blur(4px);
+            padding: 6px 18px;
+            border-radius: 60px;
+            font-size: 1.2rem;
+            color: #ffefcf;
+            font-weight: bold;
+            border: 1px solid #cb9a5e;
+        }
+
+        .info-item span {
+            color: #ffcf7a;
+            font-size: 1.5rem;
+            margin-right: 6px;
+        }
+
+        .side-panel {
+            background: #2c241e;
+            border-radius: 48px;
+            padding: 28px 24px;
+            border: 3px solid #c79a64;
+            box-shadow: 0 12px 0 #110e0a;
+            min-width: 220px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .level-selector {
+            background: #1f1812;
+            border-radius: 40px;
+            padding: 20px 16px;
+            text-align: center;
+        }
+
+        .level-selector label {
+            font-size: 1.5rem;
+            color: #ffdf9c;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        select {
+            font-family: '幼圆', monospace;
+            font-size: 1.3rem;
+            padding: 8px 16px;
+            border-radius: 60px;
+            background: #ecd5a8;
+            border: 2px solid #b87a3c;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+        }
+
+        .info-panel-simple {
+            background: #1f1812;
+            border-radius: 40px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .info-panel-simple div {
+            font-size: 1.3rem;
+            color: #fff0cf;
+            margin: 10px 0;
+        }
+
+        .info-panel-simple span {
+            color: #ffcf7a;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .pixel-btn {
+            background: #7a5a3c;
+            border: none;
+            font-family: '幼圆', 'Yuanti SC', monospace;
+            font-weight: bold;
+            font-size: 1.2rem;
+            padding: 10px 16px;
+            border-radius: 60px;
+            color: #fff7df;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #3b2a1c;
+            transition: 0.05s linear;
+            width: 100%;
+        }
+
+        .pixel-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #3b2a1c;
+        }
+
+        .start-tip {
+            text-align: center;
+            margin-top: 14px;
+            font-size: 1.2rem;
+            background: #000000aa;
+            backdrop-filter: blur(3px);
+            display: inline-block;
+            width: auto;
+            padding: 8px 24px;
+            border-radius: 60px;
+            color: #fff0bf;
+            font-weight: bold;
+        }
+
+        .flex-center {
+            display: flex;
+            justify-content: center;
+        }
+
+        @keyframes starFloat {
+            0% { transform: scale(0.2) translateY(30px); opacity: 0; }
+            40% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1) translateY(-70px); opacity: 0; }
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: scale(0.8); }
+            20% { opacity: 1; transform: scale(1); }
+            80% { opacity: 1; }
+            100% { opacity: 0; transform: scale(1.2); }
+        }
+
+        .toast-message {
+            position: fixed;
+            bottom: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2a211aee;
+            backdrop-filter: blur(12px);
+            padding: 12px 28px;
+            border-radius: 60px;
+            color: #ffeaaf;
+            font-size: 1.5rem;
+            font-weight: bold;
+            font-family: '幼圆', monospace;
+            border: 2px solid #e2b87a;
+            z-index: 300;
+            animation: fadeInOut 1.6s ease forwards;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        .close-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4a3322;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            color: #dbb06c;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #2a1f15;
+            transition: 0.05s linear;
+            z-index: 100;
+        }
+        .close-btn:hover { transform: scale(1.1); }
+        .close-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #2a1f15; }
+    </style>
+</head>
+
+<body>
+    <button class="close-btn" onclick="window.close()">✕</button>
+
+    <div class="game-container" style="display: flex; gap: 24px; flex-wrap: wrap; justify-content: center;">
+        <div class="game-wrapper">
+            <canvas id="gameCanvas" width="1000" height="550"></canvas>
+            <div class="info-bar">
+                <div class="info-item"><span>🪷</span> 莲花 <span id="scoreValue">0</span>/<span id="needScore">8</span></div>
+                <div class="info-item"><span>⭐</span> 总分 <span id="totalScoreSpan">0</span></div>
+                <div class="info-item"><span>🗻</span> 第 <span id="levelNum">1</span> 境 · <span id="dayNight">白昼</span></div>
+            </div>
+            <div class="flex-center" style="margin-top: 14px;">
+                <div class="start-tip" id="startTip">⚡ 按 WASD / 方向键 移动 & 跳跃 ⚡</div>
+            </div>
+        </div>
+
+        <div class="side-panel">
+            <div class="level-selector">
+                <label>📜 羊山石境</label>
+                <select id="levelSelect">
+                    <option value="1">第一境 · 白昼</option>
+                    <option value="2">第二境 · 黑夜</option>
+                    <option value="3">第三境 · 暮境</option>
+                </select>
+                <button class="pixel-btn" id="applyLevelBtn" style="margin-top: 16px;">✨ 进入此境 ✨</button>
+            </div>
+            <div class="info-panel-simple">
+                <div>🏆 累计莲花</div>
+                <div><span id="totalCollectedSpan">0</span></div>
+                <button class="pixel-btn" id="restartBtn" style="margin-top: 12px;">🔄 重开石境</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const W = 1000, H = 550;
+            canvas.width = W; canvas.height = H;
+
+            let gameActive = true;
+            let gameWin = false;
+            let levelCleared = false;
+            let currentLevel = 1;
+            let score = 0;
+            let totalScore = 0;
+            const TARGET_SCORE = 8;
+
+            let starRating = 0;
+            let levelStartTime = 0;
+            let levelFinishTime = 0;
+
+            let worldWidth = 3200;
+            let cameraX = 0;
+
+            const GROUND_Y = H - 72;
+
+            const sheep = {
+                x: 400, y: GROUND_Y - 54,
+                width: 32, height: 56,
+                vx: 0, vy: 0,
+                speed: 5.2,
+                gravity: 0.7,
+                jumpPower: -11.5,
+                grounded: true,
+                walkCycle: 0, legSwing: 0, armSwing: 0
+            };
+
+            let obstacles = [];
+            let collectibles = [];
+            let portal = { x: 0, y: 0, width: 48, height: 56 };
+
+            let floatingTexts = [];
+
+            let leftPressed = false, rightPressed = false;
+            let jumpRequested = false;
+
+            const levelConfig = {
+                1: { skyTop: '#d4c094', skyBottom: '#b89a6e', groundLight: '#c9a16e', night: false, dusk: false, name: '白昼', sunColor: '#fff5b0' },
+                2: { skyTop: '#2a3a2a', skyBottom: '#142014', groundLight: '#6a5238', night: true, dusk: false, name: '黑夜', moonColor: '#f9f3cf' },
+                3: { skyTop: '#e0a56a', skyBottom: '#b56f3a', groundLight: '#b27d4c', night: false, dusk: true, name: '暮境', sunColor: '#ffaa66' }
+            };
+
+            function getCfg() { return levelConfig[currentLevel]; }
+
+            function updateUI() {
+                document.getElementById('scoreValue').innerText = score;
+                document.getElementById('needScore').innerText = TARGET_SCORE;
+                document.getElementById('levelNum').innerText = currentLevel;
+                document.getElementById('dayNight').innerText = getCfg().name;
+                document.getElementById('totalCollectedSpan').innerText = totalScore;
+                document.getElementById('totalScoreSpan').innerText = totalScore;
+            }
+
+            function showToastMsg(msg) {
+                let toastDiv = document.createElement('div');
+                toastDiv.className = 'toast-message';
+                toastDiv.innerText = msg;
+                document.body.appendChild(toastDiv);
+                setTimeout(() => toastDiv.remove(), 1600);
+            }
+
+            function generateLevelWorld() {
+                const cfg = getCfg();
+                worldWidth = 2600 + currentLevel * 300;
+                let startX = 350;
+                let generated = 0;
+                portal.x = worldWidth - 200;
+                portal.y = GROUND_Y - portal.height + 12;
+                obstacles = [];
+                collectibles = [];
+
+                let currentX = startX;
+                while (generated < TARGET_SCORE && currentX < portal.x - 150) {
+                    let forceCollect = (TARGET_SCORE - generated) > ((portal.x - currentX) / 250);
+                    if (forceCollect || (Math.random() < 0.55 && generated < TARGET_SCORE)) {
+                        collectibles.push({
+                            x: currentX + Math.random() * 60,
+                            y: GROUND_Y - 34,
+                            width: 24,
+                            height: 28,
+                            collected: false,
+                        });
+                        generated++;
+                    }
+                    if (Math.random() < 0.48) {
+                        let obsW = 28;
+                        let obsH = 48;
+                        obstacles.push({
+                            x: currentX + 20,
+                            width: obsW,
+                            height: obsH,
+                            y: GROUND_Y - obsH
+                        });
+                    }
+                    let step = 180 + Math.random() * 220;
+                    currentX += step;
+                }
+                while (generated < TARGET_SCORE) {
+                    let lastX = collectibles.length ? collectibles[collectibles.length - 1].x + 150 : portal.x - 180;
+                    collectibles.push({ x: lastX, y: GROUND_Y - 34, width: 24, height: 28, collected: false });
+                    generated++;
+                }
+                obstacles.sort((a, b) => a.x - b.x);
+                collectibles.sort((a, b) => a.x - b.x);
+            }
+
+            function resetCurrentLevel() {
+                score = 0;
+                gameActive = true;
+                gameWin = false;
+                levelCleared = false;
+                sheep.x = 350;
+                sheep.y = GROUND_Y - sheep.height;
+                sheep.vx = 0;
+                sheep.vy = 0;
+                sheep.grounded = true;
+                generateLevelWorld();
+                cameraX = 0;
+                updateUI();
+            }
+
+            function fullGameReset(targetLevel = null) {
+                if (targetLevel !== null) currentLevel = targetLevel;
+                else currentLevel = parseInt(document.getElementById('levelSelect').value);
+                totalScore = 0;
+                resetCurrentLevel();
+                document.getElementById('startTip').style.opacity = '1';
+                gameActive = true;
+                gameWin = false;
+                levelCleared = false;
+                updateUI();
+            }
+
+            function completeLevelWithStars(stars) {
+                if (levelCleared) return;
+                levelCleared = true;
+                gameActive = false;
+                starRating = stars;
+
+                showToastMsg(`✨ 第 ${currentLevel} 境过关！获得 ${stars} 星 ✨`);
+                for (let i = 0; i < stars; i++) {
+                    let starDiv = document.createElement('div');
+                    starDiv.innerText = '⭐';
+                    starDiv.style.position = 'fixed';
+                    starDiv.style.fontSize = '48px';
+                    starDiv.style.left = (W / 2 - 70 + i * 60) + 'px';
+                    starDiv.style.top = '38%';
+                    starDiv.style.zIndex = 210;
+                    starDiv.style.pointerEvents = 'none';
+                    starDiv.style.animation = 'starFloat 0.9s ease-out forwards';
+                    document.body.appendChild(starDiv);
+                    setTimeout(() => starDiv.remove(), 1000);
+                }
+
+                setTimeout(() => {
+                    if (levelCleared && !gameWin) {
+                        if (currentLevel < 3) {
+                            currentLevel++;
+                            resetCurrentLevel();
+                            gameActive = true;
+                            levelCleared = false;
+                            document.getElementById('startTip').style.opacity = '0';
+                            updateUI();
+                            showToastMsg(`🌟 进入第 ${currentLevel} 境 · 自动开启 🌟`);
+                        } else {
+                            gameWin = true;
+                            gameActive = false;
+                            levelCleared = false;
+                            updateUI();
+                            showToastMsg(`🏆 三境皆通！石佛羊功德圆满 🏆`);
+                        }
+                    }
+                }, 1300);
+            }
+
+            function updateGame() {
+                if (!gameActive || gameWin || levelCleared) return;
+
+                let move = 0;
+                if (leftPressed) move = -1;
+                if (rightPressed) move = 1;
+                sheep.vx = move * sheep.speed;
+                sheep.x += sheep.vx;
+
+                if (sheep.x < 100) sheep.x = 100;
+                if (sheep.x + sheep.width > worldWidth - 100) sheep.x = worldWidth - sheep.width - 100;
+
+                if (jumpRequested && sheep.grounded) {
+                    sheep.vy = sheep.jumpPower;
+                    sheep.grounded = false;
+                    jumpRequested = false;
+                }
+
+                sheep.vy += sheep.gravity;
+                sheep.y += sheep.vy;
+                if (sheep.y + sheep.height >= GROUND_Y) {
+                    sheep.y = GROUND_Y - sheep.height;
+                    sheep.vy = 0;
+                    sheep.grounded = true;
+                } else sheep.grounded = false;
+                if (sheep.y < 0) { sheep.y = 0; if (sheep.vy < 0) sheep.vy = 0; }
+
+                let targetCam = sheep.x + sheep.width / 2 - W / 2;
+                targetCam = Math.min(Math.max(targetCam, 0), worldWidth - W);
+                cameraX = targetCam;
+
+                const sheepRect = { x: sheep.x, y: sheep.y, w: sheep.width, h: sheep.height };
+                for (let obs of obstacles) {
+                    const obsRect = { x: obs.x, y: obs.y, w: obs.width, h: obs.height };
+                    if (sheepRect.x < obsRect.x + obsRect.w && sheepRect.x + sheepRect.w > obsRect.x &&
+                        sheepRect.y < obsRect.y + obsRect.h && sheepRect.y + sheepRect.h > obsRect.y) {
+                        resetCurrentLevel();
+                        showToastMsg(`❌ 撞到石佛 · 重开此境 ❌`);
+                        return;
+                    }
+                }
+
+                for (let col of collectibles) {
+                    if (!col.collected) {
+                        const colRect = { x: col.x, y: col.y, w: col.width, h: col.height };
+                        if (sheepRect.x < colRect.x + colRect.w && sheepRect.x + sheepRect.w > colRect.x &&
+                            sheepRect.y < colRect.y + colRect.h && sheepRect.y + sheepRect.h > colRect.y) {
+                            col.collected = true;
+                            score++;
+                            totalScore++;
+                            updateUI();
+                            floatingTexts.push({ x: col.x + col.width / 2, y: col.y, life: 30, text: '+1' });
+                        }
+                    }
+                }
+
+                for (let i = 0; i < floatingTexts.length; i++) {
+                    floatingTexts[i].life--;
+                    floatingTexts[i].y -= 1.2;
+                }
+                floatingTexts = floatingTexts.filter(t => t.life > 0);
+
+                const portalRect = { x: portal.x, y: portal.y, w: portal.width, h: portal.height };
+                if (score >= TARGET_SCORE &&
+                    sheepRect.x < portalRect.x + portalRect.w && sheepRect.x + sheepRect.w > portalRect.x &&
+                    sheepRect.y < portalRect.y + portalRect.h && sheepRect.y + sheepRect.h > portalRect.y) {
+                    levelFinishTime = performance.now();
+                    let elapsed = levelFinishTime - levelStartTime;
+                    if (elapsed <= 0) elapsed = 1;
+                    let stars = 3;
+                    if (elapsed > 30000) stars = 1;
+                    else if (elapsed > 18000) stars = 2;
+                    else stars = 3;
+                    completeLevelWithStars(stars);
+                    return;
+                }
+
+                if (sheep.grounded && Math.abs(sheep.vx) > 0.1) {
+                    sheep.walkCycle = (sheep.walkCycle + 0.28) % (Math.PI * 2);
+                    sheep.legSwing = Math.sin(sheep.walkCycle) * 0.65;
+                    sheep.armSwing = Math.sin(sheep.walkCycle * 1.2) * 0.75;
+                } else {
+                    sheep.legSwing = 0; sheep.armSwing = 0;
+                }
+            }
+
+            function jump() {
+                if (!gameActive || gameWin || levelCleared) return;
+                jumpRequested = true;
+            }
+
+            function drawBackground() {
+                const cfg = getCfg();
+                let grad = ctx.createLinearGradient(0, 0, 0, H * 0.6);
+                grad.addColorStop(0, cfg.skyTop);
+                grad.addColorStop(1, cfg.skyBottom);
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, W, H);
+
+                let sunX = 120 - cameraX;
+                if (cfg.night) {
+                    ctx.fillStyle = '#f9f3cf';
+                    ctx.beginPath();
+                    ctx.arc(sunX + 780, 85, 32, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (cfg.dusk) {
+                    ctx.fillStyle = '#ffa559';
+                    ctx.beginPath();
+                    ctx.arc(sunX + 750, 100, 38, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = '#fff176';
+                    ctx.beginPath();
+                    ctx.arc(sunX + 120, 75, 36, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = '#7f6242';
+                for (let i = 0; i < 15; i++) {
+                    let xOff = (i * 100 - cameraX * 0.3) % (W + 300) - 100;
+                    ctx.beginPath();
+                    ctx.moveTo(xOff, H - 160);
+                    ctx.lineTo(xOff + 60, H - 220);
+                    ctx.lineTo(xOff + 120, H - 160);
+                    ctx.fill();
+                }
+                ctx.fillStyle = '#9c7852';
+                for (let i = 0; i < 12; i++) {
+                    let xOff = (i * 130 - cameraX * 0.5) % (W + 300) - 80;
+                    ctx.beginPath();
+                    ctx.moveTo(xOff, H - 140);
+                    ctx.lineTo(xOff + 50, H - 190);
+                    ctx.lineTo(xOff + 100, H - 140);
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = cfg.groundLight;
+                ctx.fillRect(0, GROUND_Y - 10, W, 12);
+                ctx.fillStyle = '#c49a62';
+                ctx.fillRect(0, GROUND_Y - 4, W, 8);
+                ctx.fillStyle = '#8a6742';
+                for (let i = 0; i < 25; i++) ctx.fillRect((i * 50 - cameraX * 0.7) % W, GROUND_Y - 1, 25, 5);
+                ctx.fillStyle = '#ac7a48';
+                ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+            }
+
+            function drawObstacles() {
+                for (let obs of obstacles) {
+                    let x = obs.x - cameraX;
+                    let y = obs.y;
+                    if (x + obs.width < 0 || x > W) continue;
+                    ctx.fillStyle = '#9e7b52';
+                    ctx.fillRect(x + 4, y + 8, 20, 32);
+                    ctx.fillStyle = '#c49a6a';
+                    ctx.fillRect(x + 8, y, 12, 12);
+                    ctx.fillStyle = '#dbb87a';
+                    ctx.fillRect(x + 10, y - 2, 8, 6);
+                    ctx.fillStyle = '#3a2a1c';
+                    ctx.fillRect(x + 12, y + 2, 2, 2);
+                    ctx.fillRect(x + 18, y + 2, 2, 2);
+                    ctx.fillStyle = '#b8783a';
+                    ctx.fillRect(x + 6, y + 20, 16, 4);
+                    ctx.fillRect(x + 8, y + 28, 12, 4);
+                    ctx.fillStyle = '#ffdd99';
+                    ctx.font = "14px monospace";
+                    ctx.fillText("卍", x + 12, y + 38);
+                }
+            }
+
+            function drawCollectibles() {
+                for (let col of collectibles) {
+                    if (col.collected) continue;
+                    let x = col.x - cameraX;
+                    let y = col.y;
+                    if (x + col.width < 0 || x > W) continue;
+                    ctx.fillStyle = '#6a9c4a';
+                    ctx.fillRect(x + 10, y + 18, 4, 8);
+                    ctx.fillStyle = '#f5a9c4';
+                    for (let p = 0; p < 6; p++) {
+                        let angle = p * Math.PI * 2 / 6;
+                        let px = x + 12 + Math.cos(angle) * 8;
+                        let py = y + 12 + Math.sin(angle) * 6;
+                        ctx.beginPath();
+                        ctx.ellipse(px, py, 5, 4, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.fillStyle = '#ffd966';
+                    ctx.beginPath();
+                    ctx.ellipse(x + 12, y + 12, 4, 4, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#ffeeaa';
+                    ctx.fillRect(x + 10, y + 6, 2, 2);
+                }
+            }
+
+            function drawPortal() {
+                let px = portal.x - cameraX;
+                let py = portal.y;
+                if (px + portal.width < 0 || px > W) return;
+                ctx.fillStyle = '#9e7b52';
+                ctx.fillRect(px + 8, py + 12, portal.width - 16, portal.height - 16);
+                ctx.fillStyle = '#dbaa6a';
+                ctx.fillRect(px + 4, py + 5, portal.width - 8, 13);
+                for (let i = 0; i < 3; i++) ctx.fillRect(px + 12 + i * 12, py + 26, 6, 22);
+                ctx.fillStyle = '#ffdd99';
+                ctx.font = "bold 32 '幼圆'";
+                ctx.fillText("⛩️", px + 14, py + 46);
+            }
+
+            function drawSheep() {
+                let sx = sheep.x - cameraX;
+                let sy = sheep.y;
+                ctx.fillStyle = '#e8dcc0';
+                ctx.fillRect(sx + 8, sy + 14, 22, 42);
+                ctx.fillStyle = '#b5452c';
+                ctx.fillRect(sx + 6, sy + 20, 26, 28);
+                ctx.fillStyle = '#d4693a';
+                for (let i = 0; i < 3; i++) ctx.fillRect(sx + 8 + i * 6, sy + 24, 4, 20);
+                ctx.fillStyle = '#f5ebcd';
+                ctx.fillRect(sx + 10, sy + 4, 18, 18);
+                ctx.fillStyle = '#ad784e';
+                ctx.fillRect(sx + 8, sy + 2, 6, 8);
+                ctx.fillRect(sx + 24, sy + 2, 6, 8);
+                ctx.fillStyle = '#c9945c';
+                ctx.fillRect(sx + 5, sy + 1, 4, 6);
+                ctx.fillRect(sx + 29, sy + 1, 4, 6);
+                ctx.fillStyle = '#2f2418';
+                ctx.fillRect(sx + 14, sy + 10, 3, 4);
+                ctx.fillRect(sx + 21, sy + 10, 3, 4);
+                ctx.fillStyle = '#fff2cf';
+                ctx.fillRect(sx + 15, sy + 9, 1, 2);
+                ctx.fillRect(sx + 22, sy + 9, 1, 2);
+                ctx.fillStyle = '#e09d32';
+                ctx.fillRect(sx + 18, sy + 6, 2, 2);
+                ctx.fillStyle = '#c48f42';
+                for (let i = 0; i < 4; i++) ctx.fillRect(sx + 5 + i * 6, sy + 30, 3, 3);
+                let arm = sheep.armSwing * 0.9;
+                ctx.fillStyle = '#c25a38';
+                ctx.fillRect(sx + 4, sy + 26 + arm * 2, 6, 14);
+                ctx.fillRect(sx + 28, sy + 26 - arm * 2, 6, 14);
+                let legOff = Math.floor(sheep.legSwing * 4);
+                ctx.fillStyle = '#9e6a44';
+                ctx.fillRect(sx + 10, sy + 48 + (legOff > 0 ? 2 : 0), 6, 12);
+                ctx.fillRect(sx + 22, sy + 48 + (legOff < 0 ? 2 : 0), 6, 12);
+            }
+
+            function drawUI() {
+                ctx.font = "bold 32 '幼圆', 'Yuanti SC'";
+                ctx.fillStyle = '#fff5e4';
+                ctx.fillText("🐏 石佛羊·羊山石径", 28, 54);
+
+                for (let t of floatingTexts) {
+                    ctx.font = "bold 24 '幼圆'";
+                    ctx.fillStyle = '#ffd966';
+                    ctx.fillText(t.text, t.x - cameraX - 12, t.y - 10);
+                }
+
+                if (gameWin) {
+                    ctx.font = "34 '幼圆'";
+                    ctx.fillStyle = "#ffdd99";
+                    ctx.fillText("✨ 三境皆通 · 石佛归宗 ✨", W / 2 - 280, H / 2 - 30);
+                    ctx.font = "28 '幼圆'";
+                    ctx.fillStyle = "#f7bc6e";
+                    ctx.fillText("莲花永绽，禅心圆满", W / 2 - 140, H / 2 + 40);
+                }
+                if (levelCleared && !gameWin) {
+                    ctx.font = "30 '幼圆'";
+                    ctx.fillStyle = "#ffeaac";
+                    ctx.fillText(`⭐ 获得 ${starRating} 星 · 前往下一境 ⭐`, W / 2 - 230, H / 3);
+                }
+                if (score >= TARGET_SCORE && !levelCleared && !gameWin && gameActive) {
+                    ctx.font = "bold 24 '幼圆'";
+                    ctx.fillStyle = "#fad48c";
+                    ctx.fillText("✦ 莲花已满！速往传送门 ✦", portal.x - cameraX - 55, portal.y - 24);
+                }
+                ctx.font = "22 '幼圆'";
+                ctx.fillStyle = "#fff0c0";
+                ctx.fillText("← → 移动  |  ↑/空格 跳跃", 30, H - 28);
+            }
+
+            function animate() {
+                updateGame();
+                drawBackground();
+                drawObstacles();
+                drawCollectibles();
+                drawPortal();
+                drawSheep();
+                drawUI();
+                requestAnimationFrame(animate);
+            }
+
+            function bindEvents() {
+                const restartBtn = document.getElementById('restartBtn');
+                const applyLevelBtn = document.getElementById('applyLevelBtn');
+                const levelSelect = document.getElementById('levelSelect');
+
+                restartBtn.addEventListener('click', () => {
+                    fullGameReset(currentLevel);
+                    showToastMsg(`🔄 重开石境 · 回归初心 🔄`);
+                });
+                applyLevelBtn.addEventListener('click', () => {
+                    let newLevel = parseInt(levelSelect.value);
+                    fullGameReset(newLevel);
+                    showToastMsg(`✨ 进入第 ${newLevel} 境 ✨`);
+                });
+
+                window.addEventListener('keydown', (e) => {
+                    const key = e.key;
+                    if (key === 'ArrowLeft' || key === 'a' || key === 'A') { leftPressed = true; e.preventDefault(); }
+                    if (key === 'ArrowRight' || key === 'd' || key === 'D') { rightPressed = true; e.preventDefault(); }
+                    if (key === 'ArrowUp' || key === 'w' || key === 'W' || key === ' ' || key === 'Space') {
+                        e.preventDefault();
+                        jump();
+                    }
+                    if (key === 'r' || key === 'R') fullGameReset(currentLevel);
+                });
+                window.addEventListener('keyup', (e) => {
+                    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') leftPressed = false;
+                    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') rightPressed = false;
+                });
+                canvas.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
+                canvas.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
+            }
+
+            function init() {
+                fullGameReset(1);
+                levelStartTime = performance.now();
+                bindEvents();
+                animate();
+            }
+            init();
+        })();
+    </script>
+</body>
+
+</html>
